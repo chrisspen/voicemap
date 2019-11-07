@@ -67,7 +67,7 @@ class LibriSpeechDataset(Sequence):
             )
 
             audio_files = []
-            for subset, found in found_cache.iteritems():
+            for subset, found in found_cache.items():
                 if not found:
                     audio_files += self.index_subset(subset)
 
