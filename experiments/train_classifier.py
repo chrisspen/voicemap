@@ -7,6 +7,12 @@ from keras.utils import to_categorical, Sequence
 import numpy as np
 import multiprocessing
 
+import sys
+
+DIR = os.path.join(os.path.split(os.path.abspath(__file__))[0], '..')
+print('dir:', DIR)
+sys.path.insert(0, DIR)
+
 from voicemap.utils import BatchPreProcessor, preprocess_instances, NShotEvaluationCallback
 from voicemap.models import get_baseline_convolutional_encoder
 from voicemap.librispeech import LibriSpeechDataset
@@ -26,7 +32,8 @@ batchsize = 64
 filters = 128
 embedding_dimension = 64
 dropout = 0.0
-training_set = ['train-clean-100', 'train-clean-360']
+# training_set = ['train-clean-100', 'train-clean-360']
+training_set = ['dev-clean']
 validation_set = 'dev-clean'
 pad = True
 num_epochs = 50
@@ -59,7 +66,7 @@ class BatchedSequence(Sequence):
         self.batchsize = batchsize
 
         # Initialise index to batch mapping
-        self.underlying_indexes = range(len(sequence))
+        self.underlying_indexes = list(range(len(sequence)))
 
         np.random.shuffle(self.underlying_indexes)
         self.batch_to_index = {i: self.underlying_indexes[i*batchsize:(i+1)*batchsize] for i in range(len(self))}
@@ -113,9 +120,12 @@ classifier.add(Dense(train.num_classes(), activation='softmax'))
 
 opt = Adam(clipnorm=1.)
 classifier.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
-plot_model(classifier, show_shapes=True, to_file=PATH + '/plots/classifier.png')
-print classifier.summary()
+to_file = PATH + '/plots/classifier.png'
+os.makedirs(os.path.split(to_file)[0], exist_ok=True)
+plot_model(classifier, show_shapes=True, to_file=to_file)
+print('Summary:', classifier.summary())
 
+os.makedirs(os.path.join(DIR, 'logs'), exist_ok=True)
 
 #################
 # Training Loop #
